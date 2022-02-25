@@ -71,6 +71,7 @@ runs:
       shell: bash
       if: ${{ startsWith( 'refs/heads/', github.ref ) }}
       run: >
+        echo -n REF=${{ github.ref }} && 
         mvn -B deploy 
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
@@ -81,6 +82,7 @@ runs:
       shell: bash
       if: ${{ startsWith( 'refs/tags/', github.ref ) }}
       run: >
+        echo -n REF=${{ github.ref }} && 
         mvn -B deploy 
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
