@@ -29,6 +29,7 @@ runs:
     - name: Create settings.xml
       shell: bash
       run: |
+       echo -n REF=${{ github.ref }} && 
        cat > $GITHUB_WORKSPACE/settings.xml <<'EOF'
        <settings 
          xmlns="http://maven.apache.org/SETTINGS/1.1.0" 
