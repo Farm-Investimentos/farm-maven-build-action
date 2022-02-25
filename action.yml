@@ -69,7 +69,7 @@ runs:
        EOF
     - name: Build SNAPSHOT
       shell: bash
-      if: startsWith( 'refs/heads/', github.github.ref )
+      if: startsWith( 'refs/heads/', github.ref )
       run: >
         mvn -B deploy 
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
@@ -79,7 +79,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.publish_token }}
     - name: Build RELEASE
       shell: bash
-      if: startsWith( 'refs/tags/', github.github.ref )
+      if: startsWith( 'refs/tags/', github.ref )
       run: >
         mvn -B deploy 
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
