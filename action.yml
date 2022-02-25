@@ -71,6 +71,7 @@ runs:
       shell: bash
       if: github.event.ref_type != 'tag'
       run: >
+        echo ref_type=${{github.event.ref_type}} &&
         mvn -B deploy 
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
@@ -81,6 +82,7 @@ runs:
       shell: bash
       if: github.event.ref_type == 'tag'
       run: >
+        echo ref_type=${{github.event.ref_type}} &&
         mvn -B deploy 
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
