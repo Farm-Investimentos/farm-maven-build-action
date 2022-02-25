@@ -74,7 +74,7 @@ runs:
         mvn -B deploy 
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
-        -Drevision=${{ inputs.artifact_version }}
+        -Drevision=${{ inputs.artifact_version }}-SNAPSHOT
       env:
         GITHUB_TOKEN: ${{ inputs.publish_token }}
     - name: Build RELEASE
