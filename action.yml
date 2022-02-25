@@ -1,0 +1,88 @@
+name: 'Farm Maven Build'
+author: Farm Investimentos
+description: GitHub Action para padronizar o processo de build de aplicações Java usando o Farmwork
+inputs:
+  repo_url:
+    description: URL do repositório maven para publicação de artefatos
+    required: true
+  artifact_version:
+    description: |
+      Versão do artefato que será construído. O valor será repassado para o maven
+      usando a opção -Drevision. Caso omitido, assume o valor da variável de ambiente GITHUB_REF_NAME
+    required: false
+    default: ${GITHUB_REF_NAME}
+  publish_token:
+    description: Token para acesso ao repositório Maven
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v2
+      name: Set up JDK 11
+    - uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
+        settings-path: ${{ github.workspace }} # location for the settings.xml file
+    - name: Create settings.xml
+      shell: bash
+      run: |
+       cat > $GITHUB_WORKSPACE/settings.xml <<'EOF'
+       <settings 
+         xmlns="http://maven.apache.org/SETTINGS/1.1.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+         xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd">
+         <servers>
+           <server>
+             <id>github</id>
+             <username>${env.GITHUB_ACTOR}</username>
+             <password>${env.GITHUB_TOKEN}</password>
+           </server>
+         </servers>
+         <profiles>
+           <profile>
+             <id>github-ci</id>
+             <properties>
+               <farm.repository.url>${{ inputs.repo_url}}</farm.repository.url>
+             </properties>
+             <repositories>
+                <repository>
+                  <id>github</id>
+                  <url>${{ inputs.repo_url }}</url>
+                  <releases>
+                    <enabled>true</enabled>
+                    <updatePolicy>never</updatePolicy>
+                  </releases>
+                  <snapshots>
+                    <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+             </repositories>
+           </profile>
+         </profiles>
+         <activeProfiles>
+           <activeProfile>github-ci</activeProfile>
+         </activeProfiles>
+       </settings>
+       EOF
+    - name: Build SNAPSHOT
+      shell: bash
+      if: github.event.ref_type == 'tag'
+      run: >
+        mvn -B deploy 
+        -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
+        -s $GITHUB_WORKSPACE/settings.xml
+        -Drevision=${{ inputs.artifact_version }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.publish_token }}
+    - name: Build RELEASE
+      shell: bash
+      if: github.event.ref_type != 'tag'
+      run: >
+        mvn -B deploy 
+        -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
+        -s $GITHUB_WORKSPACE/settings.xml
+        -Drevision=${{ inputs.artifact_version }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.publish_token }}
