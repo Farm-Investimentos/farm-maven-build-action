@@ -4,7 +4,8 @@ description: GitHub Action para padronizar o processo de build de aplicações J
 inputs:
   repo_url:
     description: URL do repositório maven para publicação de artefatos
-    required: true
+    required: false
+    default: https://maven.pkg.github.com/Farm-Investimentos/farm-maven-repository
   artifact_version:
     description: |
       Versão do artefato que será construído. O valor será repassado para o maven
