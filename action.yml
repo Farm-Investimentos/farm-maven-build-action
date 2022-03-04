@@ -72,7 +72,7 @@ runs:
       if:  startsWith( github.ref, 'refs/heads/'  )
       run: >
         mvn -B deploy 
-        -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
+        -DaltDeploymentRepository=github::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
         -Drevision=${{ inputs.artifact_version }}-SNAPSHOT
       env:
@@ -82,7 +82,7 @@ runs:
       if:  startsWith( github.ref, 'refs/tags/' )
       run: >
         mvn -B deploy 
-        -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
+        -DaltDeploymentRepository=github::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
         -Drevision=${{ inputs.artifact_version }}
       env:
