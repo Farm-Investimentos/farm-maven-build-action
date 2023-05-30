@@ -72,10 +72,12 @@ runs:
       shell: bash
       if:  startsWith( github.ref, 'refs/heads/'  )
       run: >
+        REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^a-z0-9_-]/__/gi') &&
+        echo REVISION=${REVISION} &&
         mvn -B deploy 
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
-        -Drevision=${{ inputs.artifact_version }}-SNAPSHOT
+        -Drevision=${REVISION}-SNAPSHOT
       env:
         GITHUB_TOKEN: ${{ inputs.publish_token }}
     - name: Build RELEASE
