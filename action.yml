@@ -76,7 +76,7 @@ runs:
       shell: bash
       if:  startsWith( github.ref, 'refs/heads/'  )
       run: >
-        REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^a-z0-9_-]/-/gi') &&
+        REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^.a-z0-9_-]/-/gi') &&
         echo REVISION=${REVISION} &&
         mvn -B deploy 
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
@@ -88,7 +88,7 @@ runs:
       shell: bash
       if:  startsWith( github.ref, 'refs/tags/' )
       run: >
-        REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^a-z0-9_-]/-/gi') &&
+        REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^.a-z0-9_-]/-/gi') &&
         echo REVISION=${REVISION} &&
         mvn -B deploy 
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
