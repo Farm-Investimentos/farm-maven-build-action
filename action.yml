@@ -96,7 +96,7 @@ runs:
       run: >
         REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^.a-z0-9_-]/-/gi') &&
         echo REVISION=${REVISION} &&
-        mvn -B deploy 
+        mvn -B deploy --no-transfer-progress
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
         -Drevision=${REVISION}
@@ -105,7 +105,8 @@ runs:
     - name: Generate SBOM
       shell: bash
       run: > 
-        mvn org.cyclonedx:cyclonedx-maven-plugin:2.7.10:makeAggregateBom
+        mvn -B org.cyclonedx:cyclonedx-maven-plugin:2.7.10:makeAggregateBom
+        --no-transfer-progress
         -s $GITHUB_WORKSPACE/settings.xml
         -Drevision=${REVISION}
         -DoutputReactorProjects=false
@@ -124,10 +125,10 @@ runs:
     - name: Send SBOM to DepTrack
       uses: DependencyTrack/gh-upload-sbom@v2.0.0
       with:
-        serverHostname: $DEPTRACK_HOST
-        apiKey: $DEPTRACK_API_KEY
-        projectName: $PROJECT_NAME
-        projectVersion: $REVISION
+        serverHostname: ${{ env.DEPTRACK_HOST }}
+        apiKey: ${{ env.DEPTRACK_API_KEY }}
+        projectName: ${{ env.PROJECT_NAME }}
+        projectVersion: ${ env.REVISION }}
         bomFilename: "target/bom.xml"
         autoCreate: true
 
