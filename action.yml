@@ -27,16 +27,21 @@ runs:
       run: |
           PROJECT_NAME=$(basename $GITHUB_REPOSITORY)
           echo "PROJECT_NAME=$PROJECT_NAME" >> $GITHUB_ENV
+          REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^.a-z0-9_-]/-/gi')
+          echo REVISION=${REVISION} >> $GITHUB_ENV
 
-    - uses: actions/checkout@v3
-      name: Set up JDK
-    - uses: actions/setup-java@v3
+    - name: Checkout project code
+      uses: actions/checkout@v3
+
+    - name: Setup Java
+      uses: actions/setup-java@v3
       with:
         java-version: ${{ inputs.java_version}}
         distribution: 'temurin'
         cache: 'maven'
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
+
     - name: Create settings.xml
       shell: bash
       run: |
@@ -78,30 +83,31 @@ runs:
          </activeProfiles>
        </settings>
        EOF
+
     - name: Build SNAPSHOT
       shell: bash
       if:  startsWith( github.ref, 'refs/heads/'  )
       run: >
-        REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^.a-z0-9_-]/-/gi') &&
-        echo REVISION=${REVISION} &&
-        mvn -B deploy 
+        mvn -B deploy --no-transfer-progress
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
         -Drevision=${REVISION}-SNAPSHOT
       env:
         GITHUB_TOKEN: ${{ inputs.publish_token }}
+
     - name: Build RELEASE
       shell: bash
       if:  startsWith( github.ref, 'refs/tags/' )
       run: >
         REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^.a-z0-9_-]/-/gi') &&
-        echo REVISION=${REVISION} &&
+        echo REVISION=${REVISION} >> $GITHUB_ENV &&
         mvn -B deploy --no-transfer-progress
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
         -Drevision=${REVISION}
       env:
         GITHUB_TOKEN: ${{ inputs.publish_token }}
+
     - name: Generate SBOM
       shell: bash
       run: > 
@@ -122,13 +128,14 @@ runs:
             echo "URL did not match pattern: $url"
             exit 1
         fi
+
     - name: Send SBOM to DepTrack
       uses: DependencyTrack/gh-upload-sbom@v2.0.0
       with:
         serverHostname: ${{ env.DEPTRACK_HOST }}
         apiKey: ${{ env.DEPTRACK_API_KEY }}
         projectName: ${{ env.PROJECT_NAME }}
-        projectVersion: ${ env.REVISION }}
+        projectVersion: ${{ env.REVISION }}
         bomFilename: "target/bom.xml"
         autoCreate: true
 
