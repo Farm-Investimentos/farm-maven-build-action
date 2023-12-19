@@ -22,6 +22,12 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Set project name
+      shell: bash
+      run: |
+          PROJECT_NAME=$(basename $GITHUB_REPOSITORY)
+          echo "PROJECT_NAME=$PROJECT_NAME" >> $GITHUB_ENV
+
     - uses: actions/checkout@v3
       name: Set up JDK
     - uses: actions/setup-java@v3
@@ -96,3 +102,32 @@ runs:
         -Drevision=${REVISION}
       env:
         GITHUB_TOKEN: ${{ inputs.publish_token }}
+    - name: Generate SBOM
+      shell: bash
+      run: > 
+        mvn 
+        -s $GITHUB_WORKSPACE/settings.xml
+        -Drevision=${REVISION}
+         org.cyclonedx:cyclonedx-maven-plugin:2.7.10:makeAggregateBom -DoutputReactorProjects=false
+
+    - name: Process Deptrack URL
+      shell: bash
+      run: |
+        pattern='^(([[:alnum:]]+):\/\/)?(([[:alnum:]]+)@)?([^:^@\/]+)(:([[:digit:]]+))?(\/?[^:^@]?)$'
+        if [[ "$DEPTRACK_URL" =~ $pattern ]]; then
+            export DEPTRACK_HOST=${BASH_REMATCH[5]}
+            echo "DEPTRACK_HOST=${DEPTRACK_HOST}" >> $GITHUB_ENV
+        else
+            echo "URL did not match pattern: $url"
+            exit 1
+        fi
+    - name: Send SBOM to DepTrack
+      uses: DependencyTrack/gh-upload-sbom@v2.0.0
+      with:
+        serverHostname: $DEPTRACK_HOST
+        apiKey: $DEPTRACK_API_KEY
+        projectName: $PROJECT_NAME
+        projectVersion: $REVISION
+        bomFilename: "target/bom.xml"
+        autoCreate: true
+
