@@ -27,8 +27,21 @@ runs:
       run: |
           PROJECT_NAME=$(basename $GITHUB_REPOSITORY)
           echo "PROJECT_NAME=$PROJECT_NAME" >> $GITHUB_ENV
-          REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^.a-z0-9_-]/-/gi')
-          echo REVISION=${REVISION} >> $GITHUB_ENV
+
+    - name: Set SNAPSHOT revision
+      if:  startsWith( github.ref, 'refs/heads/'  )
+      shell: bash
+      run: |
+        REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^.a-z0-9_-]/-/gi')
+        REVISION="${REVISION}-SNAPSHOT"
+        echo REVISION=${REVISION} >> $GITHUB_ENV
+
+    - name: Set RELEASE revision
+      if:  startsWith( github.ref, 'refs/tags/' )
+      shell: bash
+      run: |
+        REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^.a-z0-9_-]/-/gi')
+        echo REVISION=${REVISION} >> $GITHUB_ENV
 
     - name: Checkout project code
       uses: actions/checkout@v3
@@ -99,9 +112,7 @@ runs:
       shell: bash
       if:  startsWith( github.ref, 'refs/tags/' )
       run: >
-        REVISION=$(echo ${{inputs.artifact_version}} | sed 's/[^.a-z0-9_-]/-/gi') &&
-        echo REVISION=${REVISION} >> $GITHUB_ENV &&
-        mvn -B deploy --no-transfer-progress
+        mvn -B deploy --no-transfer-progress -Prelease
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
         -Drevision=${REVISION}
@@ -130,12 +141,13 @@ runs:
         fi
 
     - name: Send SBOM to DepTrack
-      uses: DependencyTrack/gh-upload-sbom@v2.0.0
+      uses: DependencyTrack/gh-upload-sbom@v3.0.0
       with:
         serverHostname: ${{ env.DEPTRACK_HOST }}
         apiKey: ${{ env.DEPTRACK_API_KEY }}
+        protocol: https
         projectName: ${{ env.PROJECT_NAME }}
         projectVersion: ${{ env.REVISION }}
-        bomFilename: "target/bom.xml"
+        bomFilename: "target/bom.json"
         autoCreate: true
 
