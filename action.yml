@@ -105,10 +105,10 @@ runs:
     - name: Generate SBOM
       shell: bash
       run: > 
-        mvn 
+        mvn org.cyclonedx:cyclonedx-maven-plugin:2.7.10:makeAggregateBom
         -s $GITHUB_WORKSPACE/settings.xml
         -Drevision=${REVISION}
-         org.cyclonedx:cyclonedx-maven-plugin:2.7.10:makeAggregateBom -DoutputReactorProjects=false
+        -DoutputReactorProjects=false
 
     - name: Process Deptrack URL
       shell: bash
