@@ -105,6 +105,7 @@ runs:
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
         -Drevision=${REVISION}-SNAPSHOT
+        org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar
       env:
         GITHUB_TOKEN: ${{ inputs.publish_token }}
 
@@ -116,6 +117,7 @@ runs:
         -DaltDeploymentRepository=github::default::${{ inputs.repo_url }}
         -s $GITHUB_WORKSPACE/settings.xml
         -Drevision=${REVISION}
+        org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar        
       env:
         GITHUB_TOKEN: ${{ inputs.publish_token }}
 
